@@ -48,19 +48,24 @@ public class MainActivity extends AppCompatActivity {
       public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
         super.onScrolled(recyclerView, dx, dy);
 
-        View transInfoView = recyclerView.findChildViewUnder(
-            tvStickyHeaderView.getMeasuredWidth() / 2, tvStickyHeaderView.getMeasuredHeight() + 1);
-        View dateInfoView = recyclerView.findChildViewUnder(
+        // Get the sticky information from the topmost view of the screen.
+        View stickyInfoView = recyclerView.findChildViewUnder(
             tvStickyHeaderView.getMeasuredWidth() / 2, 5);
 
-        if (dateInfoView != null && dateInfoView.getContentDescription() != null) {
-          tvStickyHeaderView.setText(String.valueOf(dateInfoView.getContentDescription()));
+        if (stickyInfoView != null && stickyInfoView.getContentDescription() != null) {
+          tvStickyHeaderView.setText(String.valueOf(stickyInfoView.getContentDescription()));
         }
+
+        // Get the sticky view's translationY by the first view below the sticky's height.
+        View transInfoView = recyclerView.findChildViewUnder(
+            tvStickyHeaderView.getMeasuredWidth() / 2, tvStickyHeaderView.getMeasuredHeight() + 1);
 
         if (transInfoView != null && transInfoView.getTag() != null) {
           int transViewStatus = (int) transInfoView.getTag();
           int dealtY = transInfoView.getTop() - tvStickyHeaderView.getMeasuredHeight();
           if (transViewStatus == StickyExampleAdapter.HAS_STICKY_VIEW) {
+            // If the first view below the sticky's height scroll off the screen,
+            // then recovery the sticky view's translationY.
             if (transInfoView.getTop() > 0) {
               tvStickyHeaderView.setTranslationY(dealtY);
             } else {
