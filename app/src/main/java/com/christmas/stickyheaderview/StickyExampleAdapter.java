@@ -7,6 +7,7 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -17,8 +18,12 @@ public class StickyExampleAdapter extends RecyclerView.Adapter<RecyclerView.View
   public static final int HAS_STICKY_VIEW = 2;
   public static final int NONE_STICKY_VIEW = 3;
 
+  public static final int LOAD_MORE_VIEW_TYPE = 100;
+
   private Context context;
   private List<StickyExampleModel> stickyExampleModels;
+
+  private boolean noMoreData = false;
 
   public StickyExampleAdapter(Context context, List<StickyExampleModel> recyclerViewModels) {
     this.context = context;
@@ -27,8 +32,13 @@ public class StickyExampleAdapter extends RecyclerView.Adapter<RecyclerView.View
 
   @Override
   public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-    View view = LayoutInflater.from(context).inflate(R.layout.layout_list_item, parent, false);
-    return new RecyclerViewHolder(view);
+    if (viewType == LOAD_MORE_VIEW_TYPE) {
+      View view = LayoutInflater.from(context).inflate(R.layout.layout_load_more, parent, false);
+      return new LoadMoreViewHolder(view);
+    } else {
+      View view = LayoutInflater.from(context).inflate(R.layout.layout_list_item, parent, false);
+      return new RecyclerViewHolder(view);
+    }
   }
 
   @Override
@@ -63,12 +73,47 @@ public class StickyExampleAdapter extends RecyclerView.Adapter<RecyclerView.View
         }
       }
       recyclerViewHolder.itemView.setContentDescription(stickyExampleModel.sticky);
+    } else if (viewHolder instanceof LoadMoreViewHolder) {
+      LoadMoreViewHolder loadMoreViewHolder = (LoadMoreViewHolder) viewHolder;
+      if (noMoreData) {
+        loadMoreViewHolder.pbLoading.setVisibility(View.GONE);
+        loadMoreViewHolder.tvLoadStatus.setText("没有更多数据啦...");
+
+      } else {
+        loadMoreViewHolder.pbLoading.setVisibility(View.VISIBLE);
+        loadMoreViewHolder.tvLoadStatus.setText("加载中，请稍后...");
+
+      }
     }
   }
 
   @Override
+  public int getItemViewType(int position) {
+    if (position == getItemCount() - 1) {
+      return LOAD_MORE_VIEW_TYPE;
+    }
+    return super.getItemViewType(position);
+  }
+
+  @Override
   public int getItemCount() {
-    return stickyExampleModels == null ? 0 : stickyExampleModels.size();
+    return stickyExampleModels == null ? 1 : stickyExampleModels.size() + 1;
+  }
+
+  public void setNoMoreData(boolean noMoreData) {
+    this.noMoreData = noMoreData;
+  }
+
+  public class LoadMoreViewHolder extends RecyclerView.ViewHolder {
+    public ProgressBar pbLoading;
+    public TextView tvLoadStatus;
+
+    public LoadMoreViewHolder(View itemView) {
+      super(itemView);
+
+      pbLoading = (ProgressBar) itemView.findViewById(R.id.pb_loading);
+      tvLoadStatus = (TextView) itemView.findViewById(R.id.tv_load_status);
+    }
   }
 
   public class RecyclerViewHolder extends RecyclerView.ViewHolder {
